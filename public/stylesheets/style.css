@@ -1,0 +1,40 @@
+button#btn1{
+    position: absolute; 
+    left: 0px; 
+    bottom: 0px;
+    width:100px;
+    height: 50px;
+}
+
+button#btn2{
+    position: absolute; 
+    right: 0px; 
+    bottom: 0px;
+    width: 100px;
+    height: 50px;
+}
+
+body {
+    background-color: #000;
+    margin: 0px;
+    overflow: hidden;
+}
+
+#info {
+    position: absolute;
+    top: 0px; width: 100%;
+    color: #ffffff;
+    padding: 5px;
+    font-family: Monospace;
+    font-size: 13px;
+    text-align: center;
+}
+
+a {
+    color: #ff0080;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #0080ff;
+}

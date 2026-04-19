@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - lights - spot light</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+
+	</head>
+	<body>
+		<script src="/js/three.js"></script>
+		<script src="/js/libs/dat.gui.min.js"></script>
+		<script src="/js/libs/tween.min.js"></script>
+		<script src="/js/controls/OrbitControls.js"></script>
+		<script src="/js/Detector.js"></script>
+		<script src="/js/libs/stats.min.js"></script>
+    	
+    	<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.1.min.js" defer="defer"></script>
+		<script src="/jquery/jquery-1.12.1.min.js"></script>
+		<script src="/javascripts/file.js"></script>
+    <%# 保存フォームを作成する%>
+    <form id ="form">
+      <p>
+	   <button id = "btn1" type = 'submit' name = 'action' value=" save "> save </button>
+	   <button id = "btn2" type = 'submit' name = 'action' value=" open "> open </button>
+      </p>
+    </form>
+		<script>
+
+			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setPixelRatio( window.devicePixelRatio );
+
+			var param = {}, startPoints = [], other={}; 
+			let create_SpotLights = [], create_targets  = [];
+			let add_SpotLights = [], add_targets = [];
+			let	lightgui = new dat.GUI( { width: 300 },{hideable: false} );
+			let proparty={}, LightFolder, LightHelpers = [];
+			let modellightFolder
+	  
+			var camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 2000 );
+			var controls = new THREE.OrbitControls( camera);//, renderer.domElement );
+			var scene = new THREE.Scene();
+			var projector = new THREE.Projector();
+
+			let select_target;
+			document.addEventListener('mousedown', onDocumentMouseDown, false);
+			document.addEventListener('keydown', onDocumentKeyDown, false);
+
+			var matFloor = new THREE.MeshPhongMaterial({color: 0x808080, transparent: false});//**どちらか
+			var matBox = new THREE.MeshPhongMaterial({ color: 0xaaaaaa,transparent: false});
+
+			let stage_d=20, stage_w=50;
+			var geoFloor = new THREE.BoxGeometry( 1000, 1, 1000 );
+			var geoBox = new THREE.BoxGeometry( 20, 1, 50 );
+
+			var mshFloor = new THREE.Mesh( geoFloor, matFloor );
+			var mshBox = new THREE.Mesh( geoBox, matBox );
+
+			var box = new THREE.Mesh(
+				new THREE.BoxGeometry(0.5, 0.1, 0.3),
+				new THREE.MeshLambertMaterial({color: '#FF0000'})
+			);
+			var box2 = new THREE.Mesh(
+					new THREE.BoxGeometry(0.5, 0.1, 1),
+					new THREE.MeshLambertMaterial({color: '#FF0000'})
+				);
+			box.position.set(0, 2, 0);
+			box2.position.set(0.3, 2, 0);
+			var boxes = new THREE.Group();
+
+			boxes.add(box);
+			boxes.add(box2);
+			boxes.visible=false;
+			scene.add(boxes);
+			boxes.position.set(-10,-0.5,0)
+			
+      		var matrunway = new THREE.MeshPhongMaterial( { color: 0xaaaaaa,transparent: false} );
+			var georunway = new THREE.BoxGeometry( 30, 1, 5 );
+			var mshrunway = new THREE.Mesh( georunway, matrunway );
+			
+			var matcenter = new THREE.MeshPhongMaterial( { color: 0xaaaaaa,transparent: false} );
+			var geocenter = new THREE.CylinderGeometry( 5, 5, 1, 50, 0, false );
+			var mshcenter = new THREE.Mesh( geocenter, matcenter );
+			
+			mshcenter.castShadow = true;
+			mshcenter.receiveShadow = true;
+			mshcenter.position.set( 35, 1, 0 );
+			
+			var matst1 = new THREE.MeshPhongMaterial( { color: 0xaaaaaa,transparent: false} );
+			var geost1 = new THREE.BoxGeometry( 1.5, 2.0, 25 );
+			var mshst1 = new THREE.Mesh( geost1, matst1 );
+			
+			mshst1.castShadow = true;
+			mshst1.receiveShadow = true;
+			mshst1.position.set( -20, 1, 0 );
+			
+			var matst2 = new THREE.MeshPhongMaterial( { color: 0xaaaaaa,transparent: false} );
+			var geost2 = new THREE.BoxGeometry( 1.5, 3.0, 25 );
+			var mshst2 = new THREE.Mesh( geost2, matst2 );
+			
+			mshst2.castShadow = true;
+			mshst2.receiveShadow = true;
+			mshst2.position.set( -21.5, 1, 0 );
+			
+			var matst3 = new THREE.MeshPhongMaterial( { color: 0xaaaaaa,transparent: false} );
+			var geost3 = new THREE.BoxGeometry( 1.5, 4.0, 25 );
+			var mshst3 = new THREE.Mesh( geost3, matst3 );
+			
+			mshst3.castShadow = true;
+			mshst3.receiveShadow = true;
+			mshst3.position.set( -23.0, 1, 0 );
+			
+			var matst4 = new THREE.MeshPhongMaterial( { color: 0xaaaaaa,transparent: false} );
+			var geost4 = new THREE.BoxGeometry( 1.5, 5.0, 25 );
+			var mshst4 = new THREE.Mesh( geost4, matst4 );
+			
+			mshst4.castShadow = true;
+			mshst4.receiveShadow = true;
+			mshst4.position.set( -24.5, 1, 0 );
+			
+			var matst5 = new THREE.MeshPhongMaterial( { color: 0xaaaaaa,transparent: false} );
+			var geost5 = new THREE.BoxGeometry( 1.5, 6.0, 25 );
+			var mshst5 = new THREE.Mesh( geost5, matst5 );
+			
+			mshst5.castShadow = true;
+			mshst5.receiveShadow = true;
+			mshst5.position.set( -26.0, 1, 0 );
+
+			var ambient = new THREE.AmbientLight( 0x111111 );
+
+			var spotLight1 = createSpotlight( 0xFF0000 );
+			var spotLight2 = createSpotlight( 0x00FF00 );
+
+			spotLight1.position.set( -10, 15, 0.0 );
+			spotLight2.position.set( -10, 15, 0.5 );
+
+			var stats;
+
+
+			function init() {
+				renderer.shadowMap.enabled = true;
+				renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+				renderer.gammaInput = true;
+				renderer.gammaOutput = true;
+
+
+				camera.position.set( 76, 22, -30 );
+
+				mshFloor.receiveShadow = true;
+				mshFloor.position.set( 0, 0, 0 );
+
+				mshBox.castShadow = true;
+				mshBox.receiveShadow = true;
+				mshBox.position.set( -10, 1, 0 );
+				
+				mshrunway.castShadow = true;
+				mshrunway.receiveShadow = true;
+				mshrunway.position.set( 15, 1, 0 );
+
+				add2scene( mshFloor );
+				add2scene( mshBox );
+				add2scene( ambient );
+
+				add2scene( mshrunway );
+				add2scene( mshst1 );
+				add2scene( mshcenter );
+
+
+				default_num = scene.children.length;
+				console.log(default_num);
+
+				add2scene( spotLight1 );
+				add2scene( spotLight2 );
+
+
+				document.body.appendChild( renderer.domElement );
+				onResize();
+				window.addEventListener( 'resize', onResize, false );
+				
+
+				stats = new Stats();
+				document.body.appendChild( stats.dom );
+
+				controls.target.set( 0, 7, 0 );
+				controls.maxPolarAngle = Math.PI / 2;
+				controls.update();
+
+			};
+
+			init();
+			buildGui();
+			addlightGui()
+			otherGui(); 
+			render();
+
+			
+	   $('#btn1').on({
+				'click': function(){
+				let now_spotLights = scene.children.filter(function(item, index){
+					return item.type == 'SpotLight';
+				});
+
+				let JSON_lights = now_spotLights.map(function(light) {
+					var result = light.toJSON();
+					console.log(result)
+					return result;
+					
+				});
+
+				let JSON_targets = now_targets.map(function(target) {
+					var result = target.toJSON();
+					console.log(result)
+					return result;
+				});
+				var data2 = [];
+
+				for (key in now_spotLights){
+					var onespot = {
+						'name': now_spotLights[key].name,
+						'color': now_spotLights[key].color.getHexString(),
+						'intensity': now_spotLights[key].intensity,
+						'position_x': now_spotLights[key].position.x, 
+						'position_y': now_spotLights[key].position.y,
+						'position_z': now_spotLights[key].position.z,
+						'target_x': now_targets[key].position.x,
+						'target_y': now_targets[key].position.y,
+						'target_z': now_targets[key].position.z
+					};
+					data2.push(onespot);
+				}
+				$.ajax({
+                type : 'post',
+                url : '/cgi',
+                data : JSON.stringify(data2),
+                contentType: 'application/JSON',
+                dataType : 'JSON',
+                scriptCharset: 'utf-8',
+                success : function(data) {
+                },
+                error : function(data) {
+                }
+            });
+			return false;
+				}
+	  });
+	  $('#btn2').on({
+				'click': function(){
+    			$.get('/cgi', function(data){
+
+					create_SpotLights.length=0;
+					create_targets.length=0;
+					add_SpotLights.length=0;
+					add_targets=0;
+					LightHelpers.length=0;
+
+					console.log(LightFolder)
+					
+					create_SpotLights.length=[];
+					create_targets.length=[];
+					add_SpotLights.length=[];
+					add_targets=[];
+					LightHelpers.length=[];
+					let item1 = scene.children.filter(function(item, index){
+						return item.type == 'SpotLight'
+					});
+					for (x in item1){scene.remove(item1[x])};
+					
+					let item2 = scene.children.filter(function(item, index){
+						return item.type == 'target'
+					});
+					for (y in item2){scene.remove(item2[y])};
+
+						
+					for (x in data){
+
+						let name = data[x].name.replace(/\d\d?/,'');
+						if (name == 'SpotLight' || name == 'Spotlight'){
+							let reSpotLight = reCreateSpotLight();
+							console.log(reSpotLight)
+														let x_light = data[x].position_x;
+							let y_light = data[x].position_y;
+							let z_light = data[x].position_z;
+							reSpotLight.position.set( x_light, y_light, z_light );
+							reSpotLight.intensity = data[x].intensity;
+							reSpotLight.color.setHex('0x' + data[x].color)
+							let retarget = reCreatetarget( Number(data[x].target_x), Number(data[x].target_y), Number(data[x].target_z) );
+
+							add2scene(retarget);
+							reSpotLight.target = retarget;
+
+							if (name =='SpotLight'){
+								reSpotLight.name = 'Spotlight' + create_SpotLights.length;
+							}else if (name =='Spotlight'){
+								reSpotLight.name = 'SpotLight' + create_SpotLights.length;
+							}
+							addGUI2light(reSpotLight);
+							add2scene(reSpotLight);
+						}
+					};
+				})
+				return false;
+			}
+		  });
+		  
+		</script>
+	</body>
+</html>
