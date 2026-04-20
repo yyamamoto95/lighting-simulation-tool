@@ -1,17 +1,30 @@
 {
-  "name": "firstapp",
-  "version": "0.0.0",
+  "name": "lighting-simulation-tool",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "dev": "pnpm --parallel --filter \"./client\" --filter \"./server\" dev",
+    "build": "pnpm --filter \"./client\" build && pnpm --filter \"./server\" build",
+    "test": "pnpm --recursive test",
+    "test:unit": "pnpm --filter server test && pnpm --filter client test",
+    "test:e2e": "playwright test",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "openapi:export": "pnpm --filter server openapi:export",
+    "openapi:gen": "pnpm openapi:export && pnpm --filter client api:gen",
+    "openapi:watch": "chokidar \"server/src/schema/**/*.ts\" \"server/src/routes/**/*.ts\" -c \"pnpm openapi:gen\"",
+    "check-types": "pnpm --recursive check-types"
   },
-  "dependencies": {
-    "cookie-parser": "~1.4.3",
-    "debug": "~2.6.9",
-    "ejs": "~2.5.7",
-    "express": "~4.16.0",
-    "http-errors": "~1.6.2",
-    "morgan": "~1.9.0",
-    "uuid": "^3.2.1"
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.12",
+    "@playwright/test": "^1.59.1",
+    "chokidar-cli": "^3.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ]
   }
 }

@@ -1,0 +1,281 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "舞台照明シミュレーター API",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "LightArray": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Light"
+        }
+      },
+      "Light": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LightInput"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "照明 ID"
+              },
+              "order": {
+                "type": "integer",
+                "description": "表示順"
+              }
+            },
+            "required": [
+              "id",
+              "order"
+            ]
+          }
+        ]
+      },
+      "LightType": {
+        "type": "string",
+        "enum": [
+          "spotlight",
+          "cone",
+          "cylinder-a",
+          "cylinder-b"
+        ]
+      },
+      "Vector3": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "description": "光源位置"
+      },
+      "LightInput": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/LightType"
+          },
+          "color": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 16777215,
+            "description": "照明カラー（16進数整数値 例: 0xff0000 = 16711680）",
+            "example": 16711680
+          },
+          "intensity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5,
+            "description": "光の強さ（0.0〜5.0）",
+            "example": 2
+          },
+          "position": {
+            "$ref": "#/components/schemas/Vector3"
+          },
+          "targetPosition": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Vector3"
+              },
+              {
+                "description": "照射ターゲット位置"
+              }
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "color",
+          "intensity",
+          "position",
+          "targetPosition"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success"
+        ]
+      },
+      "LightInputArray": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/LightInput"
+        }
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/api/projects/{projectId}/lights": {
+      "get": {
+        "tags": [
+          "Lights"
+        ],
+        "summary": "プロジェクトの照明一覧を取得",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "照明一覧",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LightArray"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Lights"
+        ],
+        "summary": "プロジェクトの照明一覧を保存（全件置き換え）",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LightInputArray"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "保存成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "バリデーションエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects": {
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "プロジェクト一覧を取得（将来の共有機能向け）",
+        "responses": {
+          "200": {
+            "description": "プロジェクト一覧",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
