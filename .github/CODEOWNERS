@@ -1,0 +1,12 @@
+# デフォルトオーナー（全ファイル）
+* @yamamoto-yuta
+
+# ドメイン層（ビジネスロジックの変更は慎重にレビュー）
+/server/src/domain/ @yamamoto-yuta
+
+# スキーマ定義（OpenAPI SSOT）
+/server/src/interface/dtos/ @yamamoto-yuta
+/openapi.json @yamamoto-yuta
+
+# CI / セキュリティ関連
+/.github/ @yamamoto-yuta
