@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 開発ガイドライン（CLAUDE.md）
+    url: https://github.com/yamamoto-yuta/lighting-simulation-tool/blob/main/CLAUDE.md
+    about: AI 向け開発規約・アーキテクチャ概要
+  - name: プロダクト計画（docs/plan.md）
+    url: https://github.com/yamamoto-yuta/lighting-simulation-tool/blob/main/docs/plan.md
+    about: MVP スコープ・技術スタック・API 設計
