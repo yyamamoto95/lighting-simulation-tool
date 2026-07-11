@@ -1,0 +1,111 @@
+{
+  "$schema": "https://unpkg.com/flow-wireframe/schema/flow-wireframe.schema.json",
+  "title": "照明シミュレーションツール 業務フロー ワイヤーフレーム",
+  "description": "照明知識ゼロの演出チームがブラウザだけでコンサート照明を3D可視化し、照明チームと共有するまでの流れ。ID の LS-1xx は設計系、LS-2xx は共有・永続化系。",
+  "version": "0.1.0",
+  "tokens": { "accent": "#8a4f9e" },
+  "entities": [
+    {
+      "id": "project",
+      "name": "照明設計プロジェクト",
+      "table": "Project",
+      "note": "1つの照明プラン。削除すると配下の照明もカスケード削除される。",
+      "columns": [
+        { "name": "name", "label": "プロジェクト名" },
+        { "name": "updatedAt", "label": "更新日時" }
+      ]
+    },
+    {
+      "id": "light",
+      "name": "照明（1灯）",
+      "table": "Light",
+      "note": "照明オブジェクト1つ分。種類・色・強度・光源位置・照準位置を持つ。",
+      "columns": [
+        { "name": "type", "label": "種類", "note": "spotlight / cone / cylinder-a / cylinder-b" },
+        { "name": "color", "label": "色（16進）" },
+        { "name": "intensity", "label": "強度" },
+        { "name": "positionX", "label": "光源位置", "note": "X/Y/Z の3カラム" },
+        { "name": "targetPositionX", "label": "照準位置", "note": "X/Y/Z の3カラム" },
+        { "name": "order", "label": "並び順" }
+      ]
+    }
+  ],
+  "glossary": [
+    { "term": "照準（ターゲット）", "definition": "光を当てる先。光源位置とは別に持ち、マウス＋キー操作で動かす。", "entity": "light" },
+    { "term": "デバッグモード", "definition": "補助線・ターゲット球の表示トグル。照明の狙いを正確に確認するための表示。" },
+    { "term": "照明モーション", "definition": "時間軸で設計・再生する照明のアニメーション。" }
+  ],
+  "screens": [
+    {
+      "id": "editor",
+      "name": "3Dエディタ（メイン画面）",
+      "layout": "desktop",
+      "note": "東京ドームを模した固定モデルに照明を配置する。専用ソフトや照明の専門知識は不要。",
+      "elements": [
+        { "type": "image", "label": "会場3Dビュー（Three.js）— マウスで回転・ズーム・パン", "note": "照明はリアルタイムに描画される" },
+        { "type": "choice", "label": "照明を追加", "items": ["スポット", "コーン", "シリンダーA", "シリンダーB"], "selected": "スポット" },
+        { "type": "input", "label": "色", "placeholder": "#ff66cc" },
+        { "type": "input", "label": "強度", "placeholder": "1.0", "note": "GUIでリアルタイムに変更できる" },
+        { "type": "badge", "label": "デバッグモード: 補助線・ターゲット球", "tone": "neutral" },
+        { "type": "card", "label": "アニメーション", "value": "時間軸で設計・再生", "caption": "照明モーションのタイムライン" },
+        { "type": "button", "label": "保存", "note": "照明設計データをサーバーに保存する" },
+        { "type": "button", "label": "読み込み", "variant": "secondary", "note": "保存済みプロジェクトを復元する" }
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "id": "LS-101",
+      "name": "照明を置いて狙いを決める",
+      "actor": "演出チーム",
+      "description": "中核体験。ブラウザ内で完結し、保存するまでサーバーには何も書かれない。",
+      "scenario": {
+        "given": ["3Dエディタを開いている（会場モデルが表示されている）"],
+        "when": ["照明の種類を選んで追加し、マウス＋キーで位置・照準を動かし、GUIで色・強度を変える"],
+        "then": ["変更が3Dビューにリアルタイム反映される", "デバッグモードで狙いを正確に確認できる"]
+      },
+      "steps": [
+        { "screen": "editor", "result": "ブラウザ内でリアルタイムに反映（未保存）" }
+      ]
+    },
+    {
+      "id": "LS-201",
+      "name": "設計を保存して復元する",
+      "actor": "演出チーム",
+      "scenario": {
+        "given": ["照明の配置・色・強度を調整し終えた"],
+        "when": ["「保存」を押す", "後日「読み込み」で復元する"],
+        "then": ["プロジェクトと全照明がサーバーに保存される", "再訪時に同じ設計が3Dで復元される"]
+      },
+      "steps": [
+        { "screen": "editor", "action": "「保存」を押す", "data": [
+          { "entity": "project", "change": "create", "columns": ["name"] },
+          { "entity": "light", "change": "create", "columns": ["type", "color", "intensity", "positionX", "targetPositionX", "order"], "note": "配置した全灯をまとめて保存" }
+        ] },
+        { "process": "サーバーへ永続化（SQLite）", "actor": "システム", "action": "後日「読み込み」", "result": "Hono + Prisma 経由" },
+        { "screen": "editor", "result": "同じ設計が復元される", "data": [
+          { "entity": "project", "change": "read" },
+          { "entity": "light", "change": "read" }
+        ] }
+      ]
+    },
+    {
+      "id": "LS-202",
+      "name": "照明チームと共有して議論する",
+      "actor": "演出チーム → 照明チーム",
+      "description": "このツールの目的。専門知識の壁を越えて、同じ3Dを見ながら話す。",
+      "scenario": {
+        "given": ["演出チームが照明設計を保存済みである"],
+        "when": ["照明チームが同じプロジェクトを読み込む"],
+        "then": ["双方が同じ3D可視化を見ながら議論できる", "照明の意図（狙い・色・強度）が言葉ではなく絵で伝わる"]
+      },
+      "steps": [
+        { "screen": "editor", "actor": "演出チーム", "action": "保存してプロジェクト名を伝える" },
+        { "screen": "editor", "actor": "照明チーム", "result": "同じ3Dを見ながら議論", "data": [
+          { "entity": "project", "change": "read" },
+          { "entity": "light", "change": "read" }
+        ] }
+      ]
+    }
+  ]
+}
